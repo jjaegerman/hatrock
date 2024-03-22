@@ -1,11 +1,11 @@
 import { Button, Card, TextField, IconButton, Stack, Typography, Container, Unstable_Grid2 as Grid, Divider, Switch, FormControlLabel, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Autocomplete, ListItem, ListItemText } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { GrUserAdmin } from "react-icons/gr";
 import { IoIosRemoveCircle, IoMdSearch, IoMdSync } from "react-icons/io";
 import * as Papa from 'papaparse';
 
 function Checkout() {
-    const [cart, setCart] = useState(['0','1']);
+    const [cart, setCart] = useState(new Set(['0','1']));
     const [catalog, setCatalog] = useState({})
     const [inventory, setInventory] = useState({})
     const [inventoryList, setInventoryList] = useState([])
@@ -21,8 +21,18 @@ function Checkout() {
         .then(csvMap => setInventory(csvMap))
     }
 
+    // javascript doesn't have set comparison :)
+    const areSetsEqual = (a, b) => a.size === b.size && [...a].every(value => b.has(value));
+
     useEffect(() => {
         loadDatabase()
+        window.electronAPI.onUpdateRFID((value) => {
+            console.log(value)
+            const newCart = cart.union(new Set(value))
+            if (!areSetsEqual(newCart, cart)) {
+                setCart(newCart)
+            }
+        })
     },[])
 
     useEffect(() => {
@@ -38,7 +48,7 @@ function Checkout() {
                     const formData = new FormData(event.currentTarget);
                     const formJson = Object.fromEntries(formData.entries());
                     const item = formJson.item;
-                    setCart([...cart, item])
+                    setCart([cart.union(new Set([item]))])
                     setSearchDialogue(false)
                 }
             }}>
@@ -83,7 +93,7 @@ function Checkout() {
                 >
                     <Card raised={false} sx={{height: "100%"}}><Stack direction='column' spacing={0} sx={{height: '100%', width: '100%'}}>
                         <Stack direction='column' spacing={1} sx={{padding: '2rem', overflow: 'auto'}}>
-                            {cart.map((itemId) => (
+                            {cart.values().map((itemId) => (
                                 <Stack key={itemId} direction='row' justifyContent="center" alignItems="center" sx={{marginBottom: '1rem'}}>
                                     <ListItem>
                                         <ListItemText
@@ -114,13 +124,13 @@ function Checkout() {
                             </Stack>
                             <Stack spacing={1} direction='column' alignItems="flex-end">
                                 <Typography variant="h5" gutterBottom>
-                                    ${parseFloat(cart.reduce((acc, curr) => acc + (catalog[inventory[curr]?.type]?.price || 0), 0)).toFixed(2)}
+                                    ${parseFloat(cart.values().reduce((acc, curr) => acc + (catalog[inventory[curr]?.type]?.price || 0), 0)).toFixed(2)}
                                 </Typography>
                                 <Typography variant="h6" gutterBottom>
-                                    ${parseFloat(0.13*cart.reduce((acc, curr) => acc + (catalog[inventory[curr]?.type]?.price || 0), 0)).toFixed(2)}
+                                    ${parseFloat(0.13*cart.values().reduce((acc, curr) => acc + (catalog[inventory[curr]?.type]?.price || 0), 0)).toFixed(2)}
                                 </Typography>
                                 <Typography variant="h4" gutterBottom>
-                                    ${parseFloat(1.13*cart.reduce((acc, curr) => acc + (catalog[inventory[curr]?.type]?.price || 0), 0)).toFixed(2)}
+                                    ${parseFloat(1.13*cart.values().reduce((acc, curr) => acc + (catalog[inventory[curr]?.type]?.price || 0), 0)).toFixed(2)}
                                 </Typography>
                             </Stack>
                         </Stack>
@@ -132,11 +142,14 @@ function Checkout() {
                 >
                     <Stack direction='column' sx={{ height: '100%', width: '100%'}}>
                         <Stack justifyContent="center" direction='column' alignItems="center" sx={{height: '85%', width: '100%'}}>
-                            <Button variant="contained"><Typography margin="1rem" variant="h3">Pay</Typography></Button>
+                            <Button onClick={()=>setCart([])} variant="contained"><Typography margin="1rem" variant="h3">Pay</Typography></Button>
                         </Stack>
                         <Stack justifyContent="flex-end" direction='row' alignItems="center" sx={{marginTop: "auto", width: '100%'}}>
                             <IconButton onClick={()=>setSearchDialogue(true)} color="error" disabled={!adminMode}><IoMdSearch /></IconButton>
-                            <IconButton onClick={()=>loadDatabase()} color="error" disabled={!adminMode}><IoMdSync /></IconButton>
+                            <IconButton onClick={()=>{
+                                    loadDatabase()
+                                }
+                            } color="error" disabled={!adminMode}><IoMdSync /></IconButton>
                             <FormControlLabel control={<Switch checked={adminMode} onChange={(event => (setAdminMode(event.target.checked)))} label="Admin" color="error" />} labelPlacement="bottom" label={<GrUserAdmin />}/>
                         </Stack>
                     </Stack>
