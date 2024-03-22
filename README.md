@@ -8,5 +8,11 @@ Set Up (on Windows):
 >> npm install
 
 Run:
+1. Connect and power the RFID reader
+2. Connect Universal Reader Assistant
+3. Select region + antenna
+4. Under data extensions select stream to TCP Port 9055
+5. Start reading
+6. Run the Electron app:
 >> npm run build
 >> npm run electron
