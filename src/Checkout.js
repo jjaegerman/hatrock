@@ -5,7 +5,7 @@ import { IoIosRemoveCircle, IoMdSearch, IoMdSync } from "react-icons/io";
 import * as Papa from 'papaparse';
 
 function Checkout() {
-    const [cart, setCart] = useState(new Set(['0','1']));
+    const [cart, setCart] = useState(new Set());
     const [catalog, setCatalog] = useState({})
     const [inventory, setInventory] = useState({})
     const [inventoryList, setInventoryList] = useState([])
@@ -142,7 +142,7 @@ function Checkout() {
                 >
                     <Stack direction='column' sx={{ height: '100%', width: '100%'}}>
                         <Stack justifyContent="center" direction='column' alignItems="center" sx={{height: '85%', width: '100%'}}>
-                            <Button onClick={()=>setCart([])} variant="contained"><Typography margin="1rem" variant="h3">Pay</Typography></Button>
+                            <Button onClick={()=>setCart(new Set())} variant="contained"><Typography margin="1rem" variant="h3">Pay</Typography></Button>
                         </Stack>
                         <Stack justifyContent="flex-end" direction='row' alignItems="center" sx={{marginTop: "auto", width: '100%'}}>
                             <IconButton onClick={()=>setSearchDialogue(true)} color="error" disabled={!adminMode}><IoMdSearch /></IconButton>
