@@ -26,8 +26,11 @@ function createWindow() {
     width: 800,
     height: 600,
     nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
+    autoHideMenuBar: true,
+    frame: false,
+    title: "QuickBye",
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
     }
   });
 
@@ -50,13 +53,15 @@ function createWindow() {
     console.log()
 
     // Some parsing
-    const items = data.toString().split(/\s+/).filter((e, i) => i % 5 === 0);
+    const items = data.toString().split(/\s+/).filter((e, i) => (i % 5 === 0) && (e.length > 0));
     mainWindow.webContents.send('update-rfid',items)
   })
 
   socketClient.on('end', () => {
     console.log("Socket Disconnected")
   })
+
+  mainWindow.maximize()
 }
 
 // This method will be called when Electron has finished
